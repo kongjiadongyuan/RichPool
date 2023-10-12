@@ -1,7 +1,8 @@
 import random
 import time
 
-from rich_pool import RichPool
+from rich_pool import Pool
+
 
 def test_func(status, idx):
     status["stage"] = "[green]Started"
@@ -18,15 +19,15 @@ def test_func(status, idx):
     if val >= 50:
         raise Exception("???")
     status["stage"] = "[blue]Done"
-    return idx ** 2
+    return idx**2
 
 
 if __name__ == "__main__":
-    pool = RichPool(num_processes=64, pass_status=True)
+    pool = Pool(num_processes=64, pass_status=True)
 
     for i in range(2240):
         pool.apply_async(test_func, args=(i,))
 
     pool.monitor()
-    
+
     print(pool.results())
