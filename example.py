@@ -7,6 +7,7 @@ from rich_pool import Pool
 def test_func(status, idx):
     status["stage"] = "[green]Started"
     if idx == 0:
+        status["stage"] = "test" * 0x200
         for _ in range(1000):
             time.sleep(0.5)
     else:
@@ -25,7 +26,7 @@ def test_func(status, idx):
 if __name__ == "__main__":
     pool = Pool(num_processes=64, pass_status=True)
 
-    for i in range(2240):
+    for i in range(128):
         pool.apply_async(test_func, args=(i,))
 
     pool.monitor()

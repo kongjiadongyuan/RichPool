@@ -9,7 +9,7 @@ from textual.widgets import (
     TabPane,
 )
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal, Vertical, Container
 from textual import events
 from typing import Dict, List, Any
 from asyncio import sleep
@@ -74,6 +74,10 @@ class RichPoolMonitor(App):
             self.data_tables[_status]["data_table"].add_row(
                 *to_add, key=str(row["index"])
             )
+        padding = ["" for _ in range(len(self.data_tables[_status]["keys"]))]
+        self.data_tables[_status]["data_table"].add_row(
+            *padding, key=str(-1)
+        )
 
     async def on_idle(self, event: events.Idle) -> None:
         count = self.pool.count_status()
@@ -94,17 +98,11 @@ class RichPoolMonitor(App):
         with Vertical():
             yield self.progress_bar
             yield self.status_banner
-            # with Horizontal():
-            #     with Vertical():
-            #         for status in Status:
-            #             yield Button(status.name, id=status.name)
-            #     with ContentSwitcher(initial=Status.RUNNING.name, id="switcher"):
-            #         for status in Status:
-            #             yield self.data_tables[status]["data_table"]
-            with TabbedContent(initial=Status.RUNNING.name, id="switcher"):
+            with TabbedContent(initial=Status.RUNNING.name):
                 for status in Status:
                     with TabPane(status.name, id=status.name):
-                        yield self.data_tables[status]["data_table"]
+                        with Container():
+                            yield self.data_tables[status]["data_table"]
             yield Footer()
 
     def action_refresh_table(self) -> None:
@@ -122,9 +120,11 @@ class RichPoolMonitor(App):
         if self.query_one(ContentSwitcher).current == Status.RUNNING.name:
             dt: DataTable = self.data_tables[Status.RUNNING]["data_table"]
             row = dt.get_row_at(dt.cursor_row)
-            index = row[0]
-            self.pool.kill_process(index)
-        self.action_refresh_table()
+            if len(row) > 0:
+                index = row[0]
+                if index != "":
+                    self.pool.kill_process(index)
+                    self.action_refresh_table()
 
     def action_kill_all_process(self) -> None:
         self.pool.kill_all()
