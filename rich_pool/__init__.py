@@ -1,1 +1,2 @@
-from .rich_pool import Status, ProcStatus, RichPool, RichPoolMonitor
+from .pool import RichPool, RichPoolMonitor
+from .status import ProcStatus, Status
