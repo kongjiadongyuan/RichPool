@@ -16,6 +16,13 @@ from asyncio import sleep
 
 from .status import Status, ProcStatus
 
+from enum import Enum
+
+class RichPoolExitResult(Enum):
+    QUIT = 0
+    INTERACTIVE = 1
+    QUEUE_EMPTY = 2
+
 
 class RichPoolMonitor(App):
     # CSS_PATH = "rich_pool_monitor.tcss"
@@ -89,6 +96,9 @@ class RichPoolMonitor(App):
         self.status_banner.update(
             f"{count[Status.WAITING]}/{total} waiting, {count[Status.RUNNING]}/{total} running, {count[Status.ERROR]}/{total} error, {count[Status.TERMINATED]} terminated, {count[Status.FINISHED]} finished"
         )
+        
+        if count[Status.WAITING] + count[Status.RUNNING] == 0:
+            self.exit(RichPoolExitResult.QUEUE_EMPTY)
         await sleep(0.5)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -111,10 +121,10 @@ class RichPoolMonitor(App):
             self.data_tables[status]["data_table"].refresh()
 
     def action_quit(self) -> None:
-        self.exit(0)
+        self.exit(RichPoolExitResult.QUIT)
 
     def action_interactive(self) -> None:
-        self.exit(1)
+        self.exit(RichPoolExitResult.INTERACTIVE)
 
     def action_kill_process(self) -> None:
         if self.query_one(ContentSwitcher).current == Status.RUNNING.name:
