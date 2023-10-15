@@ -1,7 +1,7 @@
 import random
 import time
 
-from rich_pool import Pool
+from rich_pool import Pool, RichPoolExitResult
 
 
 def test_func(status, idx):
@@ -29,6 +29,18 @@ if __name__ == "__main__":
     for i in range(128):
         pool.apply_async(test_func, args=(i,))
 
-    pool.monitor()
+    while True:
+        ret = pool.monitor()
+        if ret == RichPoolExitResult.INTERACTIVE:
+            pass
+        elif ret == RichPoolExitResult.QUEUE_EMPTY:
+            break
+        elif ret == RichPoolExitResult.QUIT:
+            choice = input("Quit? (yes/no): ")
+            if "yes" in choice:
+                break
+        else:
+            raise ValueError(ret)
+        
 
     print(pool.results())

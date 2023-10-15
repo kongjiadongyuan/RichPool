@@ -16,7 +16,7 @@ import time
 import random
 
 from .status import ProcStatus, Status
-from .monitor import RichPoolMonitor
+from .monitor import RichPoolMonitor, RichPoolExitResult
 
 
 def wrap_function(
@@ -125,7 +125,7 @@ class RichPool:
     def monitor(self):
         monitor = RichPoolMonitor(self)
         ret_value = monitor.run()
-        if ret_value == 1:
+        if ret_value == RichPoolExitResult.INTERACTIVE:
             try:
                 import IPython
 
@@ -137,3 +137,5 @@ class RichPool:
                 local_vars = locals()
                 shell = code.InteractiveConsole(local_vars)
                 shell.interact()
+        
+        return ret_value
