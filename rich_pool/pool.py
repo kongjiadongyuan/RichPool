@@ -112,15 +112,20 @@ class RichPool:
             if self.status_list[idx].status == Status.RUNNING or self.status_list[idx].status == Status.WAITING:
                 self.status_list[idx].status = Status.TERMINATED
     
-    def results(self):
+    def results(self, only_new: bool = False):
         res = []
+        new_res = []
         for idx in range(len(self.future_list)):
             if self.status_list[idx].status == Status.FINISHED and not self.result_fetched[idx]:
                 self.result_list[idx] = self.future_list[idx].get()
                 self.result_fetched[idx] = True
+                new_res.append(self.result_list[idx])
             if self.status_list[idx].status == Status.FINISHED:
                 res.append(self.result_list[idx])
-        return res
+        if only_new:
+            return new_res
+        else:
+            return res
 
     def monitor(self):
         monitor = RichPoolMonitor(self)
