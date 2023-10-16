@@ -86,7 +86,8 @@ class RichPoolMonitor(App):
             *padding, key=str(-1)
         )
 
-    async def on_idle(self, event: events.Idle) -> None:
+    
+    def scheduled_task(self) -> None:
         count = self.pool.count_status()
         total = len(self.pool.status_list)
         completed = (
@@ -99,7 +100,6 @@ class RichPoolMonitor(App):
         
         if count[Status.WAITING] + count[Status.RUNNING] == 0:
             self.exit(RichPoolExitResult.QUEUE_EMPTY)
-        await sleep(0.5)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         self.query_one(ContentSwitcher).current = event.button.id
@@ -114,6 +114,9 @@ class RichPoolMonitor(App):
                         with Container():
                             yield self.data_tables[status]["data_table"]
             yield Footer()
+    
+    def on_mount(self) -> None:
+        self.set_interval(0.1, self.scheduled_task)
 
     def action_refresh_table(self) -> None:
         for status in Status:
