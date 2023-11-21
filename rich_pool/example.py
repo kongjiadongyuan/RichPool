@@ -1,7 +1,7 @@
 import random
 import time
 
-from rich_pool import Pool, RichPoolExitResult
+from . import Pool, RichPoolExitResult
 
 
 def test_func(status, idx):

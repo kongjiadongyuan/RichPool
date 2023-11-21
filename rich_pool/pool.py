@@ -92,9 +92,17 @@ class RichPool:
 
     def count_status(self) -> Dict[Status, int]:
         res = defaultdict(lambda: 0)
-        for status in self.status_list:
+        for idx in range(len(self.status_list)):
+            status = self.status_list[idx]
             res[status.status] += 1
+            if status.status == Status.FINISHED and not self.result_fetched[idx]:
+                self.result_list[idx] = self.future_list[idx].get()
+                self.future_list[idx] = None
+                self.result_fetched[idx] = True
         return res
+    
+    def num_waiting(self) -> int:
+        return self.count_status()[Status.WAITING]
 
     def kill_process(self, idx: int):
         pid = self.status_list[idx].pid
@@ -112,20 +120,16 @@ class RichPool:
             if self.status_list[idx].status == Status.RUNNING or self.status_list[idx].status == Status.WAITING:
                 self.status_list[idx].status = Status.TERMINATED
     
-    def results(self, only_new: bool = False):
+    def results(self):
         res = []
-        new_res = []
         for idx in range(len(self.future_list)):
             if self.status_list[idx].status == Status.FINISHED and not self.result_fetched[idx]:
                 self.result_list[idx] = self.future_list[idx].get()
+                self.future_list[idx] = None
                 self.result_fetched[idx] = True
-                new_res.append(self.result_list[idx])
             if self.status_list[idx].status == Status.FINISHED:
                 res.append(self.result_list[idx])
-        if only_new:
-            return new_res
-        else:
-            return res
+        return res
 
     def monitor(self):
         monitor = RichPoolMonitor(self)
